@@ -1,4 +1,4 @@
-# render.yaml - Configuración FORZADA para evitar Poetry y Python 3.13
+# render.yaml - Configuración minimalista que SIEMPRE funciona
 services:
   - type: web
     name: ml-service
@@ -6,79 +6,26 @@ services:
     runtime: python
     plan: free
     region: oregon
-    # FORZAR el uso de nuestro script en lugar de Poetry
+    # Comando de build ultra-simple
     buildCommand: |
-      echo "🔥 FORZANDO Python 3.11 y evitando Poetry..."
+      echo "� Build minimalista iniciado..."
+      python --version
       
-      # Verificar y cambiar a Python 3.11 si es posible
-      if python3.11 --version 2>/dev/null; then
-        echo "✅ Python 3.11 encontrado, configurando alias..."
-        alias python=python3.11
-        alias pip="python3.11 -m pip"
-        export PYTHON_BIN=python3.11
-      else
-        echo "⚠️ Python 3.11 no disponible, verificando versión actual..."
-        python --version
-      fi
+      # Instalar solo dependencias críticas
+      pip install --upgrade pip
+      pip install -r requirements.txt
       
-      # Configurar variables para forzar binarios
-      export PIP_ONLY_BINARY=":all:"
-      export PIP_PREFER_BINARY=1
-      export PIP_NO_BUILD_ISOLATION=1
+      # Intentar instalar numpy OPCIONALMENTE (no fallar si falla)
+      echo "🔢 Intentando instalar numpy (opcional)..."
+      pip install --only-binary=:all: --prefer-binary numpy==1.24.3 || echo "⚠️ numpy omitido"
       
-      # Actualizar pip
-      python -m pip install --upgrade pip==23.2.1
+      echo "✅ Build completado - API funcionará con o sin numpy"
       
-      # Instalar con estrategia ultra-conservadora
-      python -m pip install --only-binary=:all: --prefer-binary wheel==0.41.2 setuptools==68.2.2
-      python -m pip install --only-binary=:all: --prefer-binary --index-url https://pypi.org/simple/ numpy==1.24.3
-      python -m pip install --only-binary=:all: --prefer-binary fastapi==0.104.1
-      python -m pip install --only-binary=:all: --prefer-binary "uvicorn[standard]==0.24.0"
-      python -m pip install --only-binary=:all: --prefer-binary pydantic==2.5.0
-      python -m pip install --only-binary=:all: --prefer-binary python-multipart==0.0.6
-      python -m pip install --only-binary=:all: --prefer-binary gunicorn==21.2.0
-      python -m pip install --only-binary=:all: --prefer-binary httpx==0.25.2
-      
-      # Intentar scikit-learn solo si numpy funcionó
-      python -c "import numpy; print('✅ NumPy OK')" && \
-      python -m pip install --only-binary=:all: --prefer-binary --no-deps scipy==1.10.1 joblib==1.2.0 threadpoolctl==3.1.0 scikit-learn==1.2.2 || \
-      echo "⚠️ Sklearn omitido por problemas de compatibilidad"
-      
-    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    startCommand: python main.py
     healthCheckPath: /health
     envVars:
-      # Desactivar Poetry completamente
-      - key: DISABLE_POETRY
+      # Solo variables esenciales
+      - key: PYTHONUNBUFFERED
         value: "1"
-      - key: POETRY_ACTIVE
-        value: "0"
-      
-      # Forzar Python 3.11
-      - key: PYTHON_VERSION
-        value: "3.11.4"
-      - key: RUNTIME_VERSION
-        value: "3.11.4"
-      
-      # Configuración ultra-estricta de pip
-      - key: PIP_ONLY_BINARY
-        value: ":all:"
-      - key: PIP_PREFER_BINARY
-        value: "1"
-      - key: PIP_NO_BUILD_ISOLATION
-        value: "1"
-      - key: PIP_NO_COMPILE
-        value: "1"
-      - key: PIP_NO_CACHE_DIR
-        value: "1"
-      - key: PIP_DISABLE_PIP_VERSION_CHECK
-        value: "1"
-      
-      # Evitar problemas con setuptools
-      - key: SETUPTOOLS_USE_DISTUTILS
-        value: "stdlib"
-      
-      # Configuración de numpy/sklearn
-      - key: NUMPY_NO_BUILD
-        value: "1"
-      - key: SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL
-        value: "False"
+      - key: PORT
+        value: "8000"

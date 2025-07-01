@@ -5,18 +5,26 @@ from contextlib import asynccontextmanager
 import uvicorn
 import os
 
-# Intentar importar el modelo ML, usar fallback si falla
+# Cascada de imports: intentar modelo completo -> fallback -> simple
 try:
     from ml_model import VolunteerMLModel
-    print("✅ Usando modelo ML completo")
+    print("✅ Usando modelo ML completo con scikit-learn")
+    MODEL_TYPE = "full"
 except ImportError as e:
-    print(f"⚠️ Error importando modelo ML: {e}")
+    print(f"⚠️ Error importando modelo ML completo: {e}")
     try:
         from ml_model_fallback import VolunteerMLModel
-        print("✅ Usando modelo ML fallback")
-    except ImportError:
-        print("❌ No se pudo cargar ningún modelo ML")
-        raise
+        print("✅ Usando modelo ML fallback con numpy")
+        MODEL_TYPE = "fallback"
+    except ImportError as e2:
+        print(f"⚠️ Error importando modelo fallback: {e2}")
+        try:
+            from ml_model_simple import VolunteerMLModel
+            print("✅ Usando modelo simple basado en reglas (sin dependencias ML)")
+            MODEL_TYPE = "simple"
+        except ImportError as e3:
+            print(f"❌ Error crítico: No se pudo cargar ningún modelo: {e3}")
+            raise Exception("No hay modelo ML disponible")
 
 # Cargar modelo al iniciar la aplicación
 model = VolunteerMLModel()
@@ -81,7 +89,9 @@ async def root():
     return {
         "message": "Volunteer ML API",
         "status": "active",
-        "model_loaded": model.is_trained
+        "model_loaded": model.is_trained,
+        "model_type": MODEL_TYPE,
+        "note": "API funcionando con modelo disponible"
     }
 
 @app.get("/health")
@@ -89,7 +99,10 @@ async def health_check():
     """Verificar estado de la API"""
     return {
         "status": "healthy",
-        "model_status": "loaded" if model.is_trained else "not_loaded"
+        "model_status": "loaded" if model.is_trained else "not_loaded",
+        "model_type": MODEL_TYPE,
+        "api_version": "1.0.0",
+        "ready": True
     }
 
 @app.post("/predict", response_model=PredictionResponse)
@@ -170,9 +183,15 @@ async def get_model_info():
     
     return {
         "status": "trained",
+        "model_type": MODEL_TYPE,
+        "implementation": getattr(model, 'model_type', 'RandomForestClassifier'),
         "feature_names": model.feature_names,
-        "model_type": "RandomForestClassifier",
-        "is_trained": model.is_trained
+        "is_trained": model.is_trained,
+        "note": {
+            "full": "Modelo completo con scikit-learn",
+            "fallback": "Modelo con numpy (sin scikit-learn)",
+            "simple": "Modelo basado en reglas (sin dependencias ML)"
+        }.get(MODEL_TYPE, "Tipo desconocido")
     }
 
 @app.post("/predict/batch")
@@ -197,6 +216,52 @@ async def predict_batch(requests: list[PredictionRequest]):
             results.append({"error": str(e)})
     
     return {"predictions": results}
+
+@app.get("/test")
+async def test_prediction():
+    """
+    Endpoint de prueba con datos de ejemplo
+    """
+    try:
+        # Datos de prueba
+        sample_volunteer = {
+            "reliability": 0.8,
+            "punctuality": 0.9,
+            "task_quality": 0.7,
+            "success_rate": 0.8,
+            "total_projects": 5,
+            "completed_projects": 4,
+            "total_hours": 200,
+            "availability_hours": 40
+        }
+        
+        sample_project = {
+            "project_duration": 8,
+            "project_complexity": 6,
+            "required_hours": 30
+        }
+        
+        # Hacer predicción de prueba
+        result = model.predict(sample_volunteer, sample_project)
+        
+        return {
+            "status": "success",
+            "test_data": {
+                "volunteer": sample_volunteer,
+                "project": sample_project
+            },
+            "prediction": result,
+            "model_type": MODEL_TYPE,
+            "message": "Predicción de prueba exitosa"
+        }
+        
+    except Exception as e:
+        return {
+            "status": "error",
+            "error": str(e),
+            "model_type": MODEL_TYPE,
+            "message": "Error en predicción de prueba"
+        }
 
 if __name__ == "__main__":
     uvicorn.run(

@@ -19,5 +19,7 @@ __pycache__/
 build.sh
 fallback-build.sh
 install.sh
-ml_model.py
 poetry.lock
+
+# Solo ignorar modelos que requieren dependencias pesadas
+ml_model.py

@@ -1,0 +1,20 @@
+# requirements-minimal.txt - Versiones ultra-conservadoras
+# Solo las dependencias absolutamente necesarias
+
+# Herramientas básicas
+wheel==0.41.2
+setuptools==68.2.2
+
+# Core ML (versiones LTS probadas)
+numpy==1.24.3
+scipy==1.10.1
+joblib==1.2.0
+scikit-learn==1.2.2
+
+# Core API
+fastapi==0.104.1
+uvicorn==0.24.0
+pydantic==2.5.0
+
+# Opcional para deployment
+gunicorn==21.2.0

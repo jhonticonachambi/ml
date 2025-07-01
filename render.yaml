@@ -1,25 +1,47 @@
-# render.yaml - Configuración para Render
+# render.yaml - Configuración ultra-estricta para Render
 services:
   - type: web
     name: ml-service
     env: python
+    runtime: python
     plan: free
-    buildCommand: chmod +x build.sh && ./build.sh
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1
+    region: oregon
+    buildCommand: chmod +x build.sh && bash build.sh
+    startCommand: python -m uvicorn main:app --host 0.0.0.0 --port $PORT --workers 1 --timeout-keep-alive 30
+    healthCheckPath: /health
     envVars:
+      # Forzar Python 3.11
       - key: PYTHON_VERSION
-        value: 3.11.6
-      - key: PIP_NO_CACHE_DIR
-        value: 1
-      - key: PIP_DISABLE_PIP_VERSION_CHECK
-        value: 1
+        value: "3.11.4"
+      - key: RUNTIME_VERSION
+        value: "3.11.4"
+      
+      # Configuración estricta de pip
       - key: PIP_PREFER_BINARY
-        value: 1
+        value: "1"
       - key: PIP_ONLY_BINARY
         value: ":all:"
       - key: PIP_NO_BUILD_ISOLATION
-        value: 1
+        value: "1"
+      - key: PIP_NO_COMPILE
+        value: "1"
+      - key: PIP_NO_CACHE_DIR
+        value: "1"
+      - key: PIP_DISABLE_PIP_VERSION_CHECK
+        value: "1"
+      
+      # Configuración de numpy/sklearn
+      - key: NUMPY_NO_BUILD
+        value: "1"
       - key: SKLEARN_ALLOW_DEPRECATED_SKLEARN_PACKAGE_INSTALL
         value: "False"
       - key: SKLEARN_SITE_JOBLIB
+        value: "1"
+      - key: OMP_NUM_THREADS
+        value: "1"
+      
+      # Optimización para entorno de producción
+      - key: PYTHONUNBUFFERED
+        value: "1"
+      - key: PYTHONDONTWRITEBYTECODE
         value: "1"

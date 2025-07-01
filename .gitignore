@@ -41,6 +41,37 @@ venv.bak/
 .conda/
 
 # ====================
+# ML Models y Datos
+# ====================
+# Modelos entrenados
+models/*.pkl
+models/*.joblib
+models/*.h5
+models/*.pt
+models/*.pth
+models/*.onnx
+models/metadata.pkl
+models/scaler.pkl
+models/volunteer_model.pkl
+
+# Datos de entrenamiento y testing
+data/training_data.csv
+data/test_data.csv
+data/real_data.csv
+data/backup/
+data/processed/
+data/raw/
+data/*.csv
+data/*.json
+data/*.parquet
+
+# Checkpoints y logs de entrenamiento
+checkpoints/
+logs/
+runs/
+tensorboard_logs/
+
+# ====================
 # FastAPI específico
 # ====================
 # Archivos de configuración
@@ -146,8 +177,29 @@ sandbox/
 *.dat
 *.h5
 
+# ====================
 # Archivos de métricas y resultados
+# ====================
 results/
 metrics/
 plots/
 figures/
+
+# ====================
+# Deployment y Cloud
+# ====================
+# Render.com
+.render/
+render-build/
+
+# Docker
+.dockerignore
+docker-compose.override.yml
+
+# Vercel/Netlify
+.vercel/
+.netlify/
+
+# Logs de deployment
+deploy.log
+build.log

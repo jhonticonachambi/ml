@@ -4,16 +4,17 @@ uvicorn[standard]==0.24.0
 pydantic==2.5.0
 python-multipart==0.0.6
 
-# ML and Data Processing (versiones estables con binarios precompilados)
-scikit-learn==1.3.2
-pandas==2.1.4
-numpy==1.25.2
-joblib==1.3.2
+# ML and Data Processing (versiones LTS con binarios garantizados)
+scikit-learn==1.2.2
+pandas==2.0.3
+numpy==1.24.4
+joblib==1.2.0
 
 # Dependencias adicionales para deployment
 gunicorn==21.2.0
 httpx==0.25.2
 
-# Dependencias adicionales para evitar errores de compilación
-wheel==0.42.0
-setuptools==69.0.3
+# Dependencias para evitar compilación desde fuente
+wheel==0.41.2
+setuptools==68.2.2
+Cython==0.29.36

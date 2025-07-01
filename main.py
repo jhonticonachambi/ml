@@ -1,22 +1,18 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from typing import Optional
+from contextlib import asynccontextmanager
 import uvicorn
 import os
 from ml_model import VolunteerMLModel
 
-app = FastAPI(
-    title="Volunteer ML API",
-    description="API para predecir la idoneidad de voluntarios para proyectos",
-    version="1.0.0"
-)
-
 # Cargar modelo al iniciar la aplicación
 model = VolunteerMLModel()
 
-@app.on_event("startup")
-async def startup_event():
-    """Cargar modelo al iniciar la aplicación"""
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Manejo del ciclo de vida de la aplicación"""
+    # Startup
     if os.path.exists('models/volunteer_model.pkl'):
         success = model.load_model()
         if success:
@@ -25,6 +21,18 @@ async def startup_event():
             print("❌ Error al cargar el modelo")
     else:
         print("⚠️ No se encontró modelo entrenado. Entrena el modelo primero.")
+    
+    yield
+    
+    # Shutdown
+    print("🔄 Cerrando aplicación...")
+
+app = FastAPI(
+    title="Volunteer ML API",
+    description="API para predecir la idoneidad de voluntarios para proyectos",
+    version="1.0.0",
+    lifespan=lifespan
+)
 
 # Modelos Pydantic para validación de datos
 class VolunteerData(BaseModel):
@@ -85,8 +93,8 @@ async def predict_volunteer_suitability(request: PredictionRequest):
     
     try:
         # Convertir datos Pydantic a diccionarios
-        volunteer_data = request.volunteer.dict()
-        project_data = request.project.dict()
+        volunteer_data = request.volunteer.model_dump()
+        project_data = request.project.model_dump()
         
         # Hacer predicción
         result = model.predict(volunteer_data, project_data)
@@ -169,8 +177,8 @@ async def predict_batch(requests: list[PredictionRequest]):
     results = []
     for req in requests:
         try:
-            volunteer_data = req.volunteer.dict()
-            project_data = req.project.dict()
+            volunteer_data = req.volunteer.model_dump()
+            project_data = req.project.model_dump()
             result = model.predict(volunteer_data, project_data)
             results.append(result)
         except Exception as e:

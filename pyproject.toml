@@ -1,0 +1,5 @@
+# Este archivo desactiva Poetry en Render
+# Render usará pip en lugar de Poetry
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"

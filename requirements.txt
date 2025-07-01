@@ -1,22 +1,17 @@
-# Core FastAPI dependencies
+# Core API dependencies (SOLO binarios precompilados garantizados)
 fastapi==0.104.1
 uvicorn[standard]==0.24.0
 pydantic==2.5.0
 python-multipart==0.0.6
 
-# Herramientas de construcción (instalar primero)
+# Herramientas básicas
 wheel==0.41.2
 setuptools==68.2.2
-Cython<3.0
 
-# ML y Data Processing (versiones muy estables y conservadoras)
-numpy==1.24.3
-scipy==1.10.1
-joblib==1.2.0
-threadpoolctl==3.1.0
-pandas==2.0.3
-scikit-learn==1.2.2
+# Core ML - SOLO si hay binarios disponibles
+# numpy se instalará manualmente en el build
+# scikit-learn se instalará manualmente en el build
 
-# Dependencias adicionales para deployment
+# Deployment
 gunicorn==21.2.0
 httpx==0.25.2

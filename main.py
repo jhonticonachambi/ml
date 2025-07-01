@@ -4,7 +4,19 @@ from typing import Optional
 from contextlib import asynccontextmanager
 import uvicorn
 import os
-from ml_model import VolunteerMLModel
+
+# Intentar importar el modelo ML, usar fallback si falla
+try:
+    from ml_model import VolunteerMLModel
+    print("✅ Usando modelo ML completo")
+except ImportError as e:
+    print(f"⚠️ Error importando modelo ML: {e}")
+    try:
+        from ml_model_fallback import VolunteerMLModel
+        print("✅ Usando modelo ML fallback")
+    except ImportError:
+        print("❌ No se pudo cargar ningún modelo ML")
+        raise
 
 # Cargar modelo al iniciar la aplicación
 model = VolunteerMLModel()

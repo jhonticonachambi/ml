@@ -14,3 +14,10 @@ __pycache__/
 *.log
 .env
 .env.local
+
+# Archivos de build que pueden causar problemas
+build.sh
+fallback-build.sh
+install.sh
+ml_model.py
+poetry.lock
